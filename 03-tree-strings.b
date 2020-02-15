@@ -26,7 +26,7 @@ let add(root, val) be
 {
   let @ node;
   node = new_node(val);
-  test root = nil then
+  test !root = nil then
   {
     resultis node;
   }
@@ -69,13 +69,15 @@ let printTree(root)
 
 let getInput()
 {
-    
+   let str;
+
+   until
 }
 
 let start() be
 {
 
-  /* 
+  /*  TODO:
    *  Program must:
    *  - accept string from user
    *  - put them into a binary tree
@@ -101,7 +103,7 @@ let start() be
     }
     else
     {
-      treeRoot := add(treeRoot,uInput);
+      add(treeRoot,uInput);
     }
   }
 
