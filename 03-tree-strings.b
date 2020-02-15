@@ -2,11 +2,12 @@ import "io"
 
 manifest
 {
-  left = 0,
-  data = 1,
+  data = 0,
+  left = 1,
   right = 2,
   size = 1000,
-  sizeof_node = 3
+  sizeof_node = 3,
+  buff = 20
 }
   
 let new_node(x) be
@@ -18,27 +19,58 @@ let new_node(x) be
   resultis ptr;
 }  
 
-let add(key,val) be
+
+/* adds an element to the tree */
+/* root: the root node of the tree, is a pointer to a pointer*/
+let add(root, val) be
+{
+  let @ node;
+  node = new_node(val);
+  test root = nil then
+  {
+    resultis node;
+  }
+  else test !root!data > val then
+  {
+    !root!left := add(!root!left,node);
+  }
+  else
+  {
+    !root!right := add(!root!right,node);
+  }
+
+  resultis root;
+}
+
+/* removes an element from the tree */
+let remove(val) be
 {
 
 }
 
-let remove(key) be
-{
-
-}
-
+/* builds a new tree with 'root' as the root element */
 let buildTree(root)
 {
 
 }
 
-let printTree(tree)
+/* delete entire tree */
+let rmTree(root)
 {
 
 }
 
-let 
+/* print tree */
+let printTree(root)
+{
+  test root = nil then
+
+}
+
+let getInput()
+{
+    
+}
 
 let start() be
 {
@@ -47,23 +79,29 @@ let start() be
    *  Program must:
    *  - accept string from user
    *  - put them into a binary tree
-   *  - print tree when user types * in alphabetical order
+   *  - print tree in alphabetical order when user types * 
    *  - delete entrie tree, and repat all over
    */
-  let uInput, tree;
+
+  let uInput, treeRoot, heap = vec(size);
+
+  /* initialize heap */
+  init(heap,size);
 
   uInput := getInput();
+  treeRoot := buildTree(uInput);
 
   while true do
   {
     uInput := getInput();
-    tree := buildTree(uInput);
     if(uInput = '*')
     {
-      printTree(tree);
-      rmTree(tree);
-      uInput = getInput();
-      tree := buildTree(uInput);
+      printTree(treeRoot);
+      rmTree(treeRoot);
+    }
+    else
+    {
+      treeRoot := add(treeRoot,uInput);
     }
   }
 
