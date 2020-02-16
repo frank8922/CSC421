@@ -84,6 +84,10 @@ let strcpy(dst, src) be
   }
 }
 
+/* src is a ptr to the str being copied
+   size is a pointer to the size of the 
+   string being coped
+*/
 let resizeStr(src,size) be
 {
   let dst; 
@@ -111,6 +115,7 @@ let getInput() be
        str := resizeStr(@str,@size);
      }
    }
+    byte length+1 of str:=0;
     resultis str;
 }
 
@@ -126,13 +131,24 @@ let start() be
    *  - delete entrie tree, and repat all over
    */
 
-  let uInput, treeRoot, heap = vec(size);
+  let uInput, treeRoot, heap = vec(size), i = 0;
 
   /* initialize heap */
   init(heap,size);
 
   uInput := getInput();
   out("string entered: %s\n",uInput);
+  while true do
+  {
+    test byte i of uInput ~= 0 then
+    {
+      out("%c",byte i of uInput);
+    }
+    else
+    {
+      break;
+    }
+  } 
   //treeRoot := buildTree(uInput);
 /*
   while true do
