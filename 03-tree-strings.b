@@ -5,17 +5,17 @@ manifest
   data = 0,
   left = 1,
   right = 2,
-  size = 1000,
+  size = 10000,
   sizeof_node = 3,
-  buff = 20
+  buff = 2
 }
   
 let new_node(x) be
 {
   let ptr = newvec(sizeof_node);
-  ptr ! data  : = x;
-  ptr ! left  : = nil;
-  ptr ! right : = nil
+  ptr ! data  := x;
+  ptr ! left  := nil;
+  ptr ! right := nil;
   resultis ptr;
 }  
 
@@ -24,55 +24,96 @@ let new_node(x) be
 /* root: the root node of the tree, is a pointer to a pointer*/
 let add(root, val) be
 {
-  let @ node;
-  node = new_node(val);
-  test !root = nil then
+  let node;
+
+  test root = nil then
   {
+    node := new_node(val);
     resultis node;
   }
-  else test !root!data > val then
+  else test root!data > val then
   {
-    !root!left := add(!root!left,node);
+    root!left := add(root!left,node);
   }
   else
   {
-    !root!right := add(!root!right,node);
+    root!right := add(root!right,node);
   }
 
   resultis root;
 }
 
-/* removes an element from the tree */
-let remove(val) be
-{
+/*[> removes an element from the tree <]*/
+/*let remove(val) be*/
+/*{*/
 
-}
+/*}*/
 
-/* builds a new tree with 'root' as the root element */
-let buildTree(root)
-{
+/*[> builds a new tree with 'root' as the root element <]*/
+/*let buildTree(root)*/
+/*{*/
 
-}
+/*}*/
 
 /* delete entire tree */
-let rmTree(root)
-{
+/*let rmTree(root)*/
+/*{*/
 
+/*}*/
+
+/*[> print tree <]*/
+/*let printTree(root)*/
+/*{*/
+  /*test root = nil then*/
+
+/*}*/
+
+let strcpy(dst, src) be
+{
+  let i = 0;
+  while true do
+  {
+    let c = byte i of src;
+    if c = 0 then
+    {
+      byte i of dst := c;
+      break;
+    }
+    byte i of dst := c;
+    i +:= 1
+  }
 }
 
-/* print tree */
-let printTree(root)
+let resizeStr(src,size) be
 {
-  test root = nil then
-
+  let dst; 
+  !size *:= 2; 
+  dst := newvec(!size);
+  strcpy(dst,!src);
+  resultis dst;
 }
 
-let getInput()
+let getInput() be
 {
-   let str;
-
-   until
+   let c, size = buff, str = newvec(size), length = 0;
+   while true do
+   {
+     test length < size do
+     {
+       c := inch();
+       if c < 'A' \/ c > 'z' then
+         break;
+       byte length of str:=c;
+       length +:= 1;
+     }
+     else
+     {
+       str := resizeStr(@str,@size);
+     }
+   }
+    resultis str;
 }
+
 
 let start() be
 {
@@ -91,8 +132,9 @@ let start() be
   init(heap,size);
 
   uInput := getInput();
-  treeRoot := buildTree(uInput);
-
+  out("string entered: %s\n",uInput);
+  //treeRoot := buildTree(uInput);
+/*
   while true do
   {
     uInput := getInput();
@@ -100,11 +142,13 @@ let start() be
     {
       printTree(treeRoot);
       rmTree(treeRoot);
+      out("user input: %s\n",uInput);
     }
     else
     {
       add(treeRoot,uInput);
     }
   }
+*/
 
 }
