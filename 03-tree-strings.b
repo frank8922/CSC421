@@ -24,20 +24,17 @@ let new_node(x) be
 /* root: the root node of the tree, is a pointer to a pointer*/
 let add(root, val) be
 {
-  let node;
-
-  test root = nil then
+  if root = nil then
   {
-    node := new_node(val);
-    resultis node;
+    resultis new_node(val);
   }
-  else test root!data > val then
+  test root ! data > val then
   {
-    root!left := add(root!left,node);
+    root ! left := add(root ! left,val);
   }
   else
   {
-    root!right := add(root!right,node);
+    root ! right := add(root ! right,val);
   }
 
   resultis root;
@@ -49,24 +46,26 @@ let add(root, val) be
 
 /*}*/
 
-/*[> builds a new tree with 'root' as the root element <]*/
-/*let buildTree(root)*/
-/*{*/
 
-/*}*/
-
-/* delete entire tree */
+/*[> delete entire tree <]*/
 /*let rmTree(root)*/
 /*{*/
-
+   
 /*}*/
 
-/*[> print tree <]*/
-/*let printTree(root)*/
-/*{*/
-  /*test root = nil then*/
+/* print tree */
+let printTree(rootPtr) be
+{
+  if rootPtr = nil then
+  {
+    return; 
+  }
+  printTree(rootPtr ! left);
+  out("%s\n",rootPtr ! data);
+  printTree(rootPtr ! right);
 
-/*}*/
+
+}
 
 let strcpy(dst, src) be
 {
@@ -94,6 +93,7 @@ let resizeStr(src,size) be
   !size *:= 2; 
   dst := newvec(!size);
   strcpy(dst,!src);
+  freevec(!src);
   resultis dst;
 }
 
@@ -115,7 +115,7 @@ let getInput() be
        str := resizeStr(@str,@size);
      }
    }
-    byte length+1 of str:=0;
+    byte length+1 of str := 0;
     resultis str;
 }
 
@@ -125,46 +125,30 @@ let start() be
 
   /*  TODO:
    *  Program must:
-   *  - accept string from user
+   *  - accept string from user X
    *  - put them into a binary tree
    *  - print tree in alphabetical order when user types * 
    *  - delete entrie tree, and repat all over
    */
 
-  let uInput, treeRoot, heap = vec(size), i = 0;
+  let uInput, treeRoot = nil, heap = vec(size), i = 0;
 
   /* initialize heap */
   init(heap,size);
 
-  uInput := getInput();
-  out("string entered: %s\n",uInput);
-  while true do
-  {
-    test byte i of uInput ~= 0 then
-    {
-      out("%c",byte i of uInput);
-    }
-    else
-    {
-      break;
-    }
-  } 
-  //treeRoot := buildTree(uInput);
-/*
+
   while true do
   {
     uInput := getInput();
-    if(uInput = '*')
+    test uInput = '*' then
     {
       printTree(treeRoot);
-      rmTree(treeRoot);
-      out("user input: %s\n",uInput);
+      //rmTree(treeRoot);
     }
     else
     {
-      add(treeRoot,uInput);
+      treeRoot := add(treeRoot,uInput);
     }
   }
-*/
 
 }
