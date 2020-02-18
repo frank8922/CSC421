@@ -17,7 +17,8 @@ let new_node(x) be
   ptr ! left  := nil;
   ptr ! right := nil;
   resultis ptr;
-}  
+}
+
 
 
 /* adds an element to the tree */
@@ -92,17 +93,23 @@ let resizeStr(src,size) be
   let dst; 
   !size *:= 2; 
   dst := newvec(!size);
+  for i = 0 to !size - 1 do
+  {
+    dst ! i := 0;
+  }
   strcpy(dst,!src);
   freevec(!src);
   resultis dst;
 }
 
-let getInput() be
+let getInput(x) be
 {
    let c, size = buff, str = newvec(size), length = 0;
+   byte length of str:= x;
+   length +:= 1;
    while true do
    {
-     test length < size do
+     test length < size * 4 - 1 do
      {
        c := inch();
        if c < 'A' \/ c > 'z' then
@@ -115,7 +122,7 @@ let getInput() be
        str := resizeStr(@str,@size);
      }
    }
-    byte length+1 of str := 0;
+   byte length of str := 0;
     resultis str;
 }
 
@@ -131,7 +138,7 @@ let start() be
    *  - delete entrie tree, and repat all over
    */
 
-  let uInput, treeRoot = nil, heap = vec(size), i = 0;
+  let uInput, treeRoot = nil, heap = vec(size), i = 0, c;
 
   /* initialize heap */
   init(heap,size);
@@ -139,14 +146,16 @@ let start() be
 
   while true do
   {
-    uInput := getInput();
-    test uInput = '*' then
+
+    c := inch();
+    test c = '*' then
     {
       printTree(treeRoot);
       //rmTree(treeRoot);
     }
     else
     {
+      uInput := getInput(c);
       treeRoot := add(treeRoot,uInput);
     }
   }
