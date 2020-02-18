@@ -7,7 +7,7 @@ manifest
   right = 2,
   size = 10000,
   sizeof_node = 3,
-  buff = 2
+  buff = 2 //in words (i.e 32bit words)
 }
   
 let new_node(x) be
