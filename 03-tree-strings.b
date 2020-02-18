@@ -41,18 +41,21 @@ let add(root, val) be
   resultis root;
 }
 
-/*[> removes an element from the tree <]*/
-/*let remove(val) be*/
-/*{*/
 
-/*}*/
-
-
-/*[> delete entire tree <]*/
-/*let rmTree(root)*/
-/*{*/
-   
-/*}*/
+/* delete entire tree */
+let rmTree(rootPtr) be
+{
+  if rootPtr = nil then
+  {
+    return; 
+  }
+  freevec(rootPtr ! left);
+  rootPtr ! left := nil;
+  freevec(rootPtr ! right);
+  rootPtr ! right := nil;
+  freevec(rootPtr);
+  rootPtr := nil;
+}
 
 /* print tree */
 let printTree(rootPtr) be
@@ -133,7 +136,7 @@ let start() be
   /*  TODO:
    *  Program must:
    *  - accept string from user X
-   *  - put them into a binary tree
+   *  - put them into a binary tree X
    *  - print tree in alphabetical order when user types * 
    *  - delete entrie tree, and repat all over
    */
@@ -151,7 +154,7 @@ let start() be
     test c = '*' then
     {
       printTree(treeRoot);
-      //rmTree(treeRoot);
+      rmTree(treeRoot);
     }
     else
     {
