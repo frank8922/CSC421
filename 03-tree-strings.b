@@ -49,12 +49,12 @@ let rmTree(rootPtr) be
   {
     return; 
   }
-  freevec(rootPtr ! left);
-  rootPtr ! left := nil;
-  freevec(rootPtr ! right);
-  rootPtr ! right := nil;
-  freevec(rootPtr);
-  rootPtr := nil;
+  freevec(!rootPtr ! left);
+  !rootPtr ! left := nil;
+  freevec(!rootPtr ! right);
+  !rootPtr ! right := nil;
+  freevec(!rootPtr);
+  !rootPtr := nil;
 }
 
 /* print tree */
@@ -154,7 +154,7 @@ let start() be
     test c = '*' then
     {
       printTree(treeRoot);
-      rmTree(treeRoot);
+      rmTree(@treeRoot);
     }
     else
     {
