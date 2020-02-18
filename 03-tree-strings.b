@@ -102,16 +102,25 @@ let resizeStr(src,size) be
   }
   strcpy(dst,!src);
   freevec(!src);
+  !src := nil;
   resultis dst;
 }
 
 let getInput(x) be
 {
+   /* local variables */
    let c, size = buff, str = newvec(size), length = 0;
+
+  //add the char that I passed in to the string
    byte length of str:= x;
+   //increase the length by 1 (accounting for char passed in)
    length +:= 1;
+
    while true do
    {
+     //the size of the byte is size * 4 since
+     //the newvec is word addressable and not byte addressable
+     // - 1 is to make sure space for null terminator is available
      test length < size * 4 - 1 do
      {
        c := inch();
@@ -138,7 +147,7 @@ let start() be
    *  - accept string from user X
    *  - put them into a binary tree X
    *  - print tree in alphabetical order when user types * 
-   *  - delete entrie tree, and repat all over
+   *  - delete entrie tree, and repat all over X
    */
 
   let uInput, treeRoot = nil, heap = vec(size), i = 0, c;
@@ -154,11 +163,16 @@ let start() be
     test c = '*' then
     {
       printTree(treeRoot);
+      
+      //pass the tree by reference so I can remove all nodes
       rmTree(@treeRoot);
     }
     else
     {
+      //if the first char wasn't a * then add that to the string
+      //and get the rest of the string
       uInput := getInput(c);
+      
       treeRoot := add(treeRoot,uInput);
     }
   }
