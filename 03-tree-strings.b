@@ -91,12 +91,12 @@ let strcpy(dst, src) be
    size is a pointer to the size of the 
    string being copied
 */
-let resizeStr(src,size) be
+let resizeStr(src,len) be
 {
   let dst; 
-  !size *:= 2; 
-  dst := newvec(!size);
-  for i = 0 to !size - 1 do
+  !len *:= 2; 
+  dst := newvec(!len);
+  for i = 0 to !len - 1 do
   {
     dst ! i := 0;
   }
@@ -109,29 +109,33 @@ let resizeStr(src,size) be
 let getInput(x) be
 {
    /* local variables */
-   let c, size = buff, str = newvec(size), length = 0;
+   let c, max_size = buff, str = newvec(max_size), length = 0;
 
   //add the char that I passed in to the string
-   byte length of str:= x;
+   /*byte length of str:= x;*/
    //increase the length by 1 (accounting for char passed in)
+   /*length +:= 1;*/
+   byte length of str:=x;
    length +:= 1;
 
-   while true do
+     while true do
    {
      //the size of the byte is size * 4 since
      //the newvec is word addressable and not byte addressable
      // - 1 is to make sure space for null terminator is available
-     test length < size * 4 - 1 do
+     test length < max_size * 4 - 1 do
      {
        c := inch();
-       if c < 'A' \/ c > 'z' then
-         break;
+       if c < 'A' \/ c > 'z' do
+       {
+           break;
+       }
        byte length of str:=c;
        length +:= 1;
      }
      else
      {
-       str := resizeStr(@str,@size);
+       str := resizeStr(@str,@max_size);
      }
    }
    byte length of str := 0;
@@ -167,14 +171,16 @@ let start() be
       //pass the tree by reference so I can remove all nodes
       rmTree(@treeRoot);
     }
-    else
+    else test c > 'A' /\ c < 'z' then
     {
       //if the first char wasn't a * then add that to the string
       //and get the rest of the string
-      uInput := getInput(c);
-      
-      treeRoot := add(treeRoot,uInput);
+        uInput := getInput(c);
+        treeRoot := add(treeRoot,uInput);
+    }
+    else
+    {
+      loop;
     }
   }
-
 }
