@@ -89,7 +89,7 @@ let strcpy(dst, src) be
 
 /* src is a ptr to the str being copied
    size is a pointer to the size of the 
-   string being coped
+   string being copied
 */
 let resizeStr(src,size) be
 {
