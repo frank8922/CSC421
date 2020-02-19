@@ -7,7 +7,9 @@ manifest
   right = 2,
   size = 10000,
   sizeof_node = 3,
-  buff = 2 //in words (i.e 32bit words)
+  buff = 2, //in words (i.e 32bit words)
+  PRINT = 2, 
+  INVALID = -1
 }
   
 let new_node(x) be
@@ -71,6 +73,7 @@ let printTree(rootPtr) be
 
 }
 
+/* helper function to copy string */
 let strcpy(dst, src) be
 {
   let i = 0;
@@ -106,40 +109,81 @@ let resizeStr(src,len) be
   resultis dst;
 }
 
-let getInput(x) be
+/* helper function to validate char */
+let validate(x) be
+{
+  test x < 'A' \/ x > 'z'do
+  {
+    resultis false;
+  }
+  else
+  {
+    resultis true;
+  }
+}
+
+/* helper function to detect newline */
+let isNewline(x) be
+{
+  resultis x = '\n'
+}
+
+
+let getInput() be
 {
    /* local variables */
-   let c, max_size = buff, str = newvec(max_size), length = 0;
-
-  //add the char that I passed in to the string
-   /*byte length of str:= x;*/
-   //increase the length by 1 (accounting for char passed in)
-   /*length +:= 1;*/
-   byte length of str:=x;
-   length +:= 1;
-
-     while true do
-   {
-     //the size of the byte is size * 4 since
-     //the newvec is word addressable and not byte addressable
-     // - 1 is to make sure space for null terminator is available
-     test length < max_size * 4 - 1 do
+  let char, max_size = buff, str = newvec(max_size), length = 0, bytes_per_word = 4;
+  
+  while true do
+  {
+     char := inch(); //get char from user
+   
+      //check if first char is newline
+     if length = 0 /\ isNewLine(char) = true do
      {
-       c := inch();
-       if c < 'A' \/ c > 'z' do
-       {
-           break;
-       }
-       byte length of str:=c;
-       length +:= 1;
+       break //if so get new char
      }
-     else
+
+      //check if string length less than max size
+      //converted to bytes (-1 leaving room for string terminator
+     test length < max_size * bytes_per_word - 1 do
+     {
+         //if first char is * return print to print tree
+         test length = 0 /\ char = '*' do
+         {
+           resultis PRINT;
+           break;
+         }
+         //if not a valid char or is a newline, in the middle of word, then return string with string terminator appended
+         else test validate(char) = false \/ isNewline(char) = true do
+         {
+           //check if past the first char, 
+           //if so place string terminator on existing word and return string
+           test length > 0 do
+           {
+             byte length of str := 0;
+             resultis str;
+           }
+           else //otherwise return invalid (meaning request input again)
+           {
+             resultis INVALID; 
+             break;
+           }
+         }
+         else //otherwise keep building string by appending chars
+         {
+           byte length of str := char;
+           length +:= 1;
+         }
+
+     }
+     else //resize string
      {
        str := resizeStr(@str,@max_size);
      }
-   }
-   byte length of str := 0;
-    resultis str;
+
+  }
+
 }
 
 
@@ -154,33 +198,31 @@ let start() be
    *  - delete entrie tree, and repat all over X
    */
 
-  let uInput, treeRoot = nil, heap = vec(size), i = 0, c;
-
+  let uInput = nil, treeRoot = nil, heap = vec(size);
   /* initialize heap */
   init(heap,size);
-
 
   while true do
   {
 
-    c := inch();
-    test c = '*' then
+    uInput := getInput();
+    /*out("str=%s(string),%d(int),%c(char),%x(hex)\n",uInput,uInput,uInput,uInput);*/
+    switchon uInput into
     {
-      printTree(treeRoot);
-      
-      //pass the tree by reference so I can remove all nodes
-      rmTree(@treeRoot);
-    }
-    else test c > 'A' /\ c < 'z' then
-    {
-      //if the first char wasn't a * then add that to the string
-      //and get the rest of the string
-        uInput := getInput(c);
+      case PRINT:
+        out("printing tree\n");
+        printTree(treeRoot);
+
+        //pass the tree by reference so I can remove all nodes
+        rmTree(@treeRoot);
+
+        endcase;
+      case INVALID: //do nothing aka loop if input invalid
+        endcase;
+      default:
+        out("adding to tree %s\n",uInput);
         treeRoot := add(treeRoot,uInput);
     }
-    else
-    {
-      loop;
-    }
+        
   }
 }
