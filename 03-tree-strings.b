@@ -179,16 +179,13 @@ let validate(x) be
   resultis val;
 }
 
-/* helper function to detect newline */
+/* helper function to detect blanks */
 let isBlank(x) be
 {
   let val;
 
   switchon x into
   {
-    case ' ':
-     val := true;
-     endcase;
     case '\n':
      val := true;
      endcase;
@@ -196,6 +193,12 @@ let isBlank(x) be
      val := true;
      endcase;
     case '\r':
+     val := true;
+     endcase;
+    case '\s':
+     val := true;
+     endcase;
+    case '\b':
      val := true;
      endcase;
     default:
@@ -207,8 +210,8 @@ let isBlank(x) be
 
 
 /* if '*' is the first char, returns print code 
+   if first char is blank returns invalid char code
    otherwise returns string from stdin. 
-   string must be within a-z or A-Z otherwise returns invalid char error
 */
 let getInput() be
 {
@@ -224,7 +227,7 @@ let getInput() be
   {
      char := inch(); //get char from user.
 
-     if length = 0 /\ isBlank(char) = true do //check if first char is newline.
+     if length = 0 /\ isBlank(char) = true do //check if first char is blank.
      {
         str:= INVALID_CHAR; //if so return invalid char error code.
         break;
