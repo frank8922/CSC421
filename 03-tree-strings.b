@@ -8,8 +8,8 @@ manifest
   size = 10000,
   sizeof_node = 3,
   buff = 2, //in words (i.e 32bit words)
-  PRINT = 2, 
-  INVALID = -1
+  PRINT = 2, //const used to indicate to print tree 
+  INVALID = -1 //const used to indicate skip char
 }
   
 let new_node(x) be
