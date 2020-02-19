@@ -44,7 +44,7 @@ let new_node(x) be
 /* helper function to compare strings */
 let strcmp(x,y) be
 {
-  let i = 0;
+  let i = 0, val;
   while true do
   {
     let char_x = byte i of x,
@@ -52,30 +52,34 @@ let strcmp(x,y) be
 
         test char_x < char_y do
         {
-          resultis -1;
+          val := -1;
+          break;
         }
         else test char_x = char_y do
         {
-          resultis 0;
+          val := 0;
+          break;
         }
         else
         {
-          resultis 1;
+          val := 1;
+          break;
         }
         
         x +:= 1;
   }
+  resultis val;
 }
 
 /* adds an element to the tree */
 /* root: the root node of the tree, is a pointer to a pointer*/
 let add(root, val) be
 {
-  if root = nil then
+  test root = nil then
   {
-    resultis new_node(val);
+    root := new_node(val);
   }
-  test strcmp(root ! data,val) > 0 then
+  else test strcmp(root ! data,val) > 0 then
   {
     root ! left := add(root ! left,val);
   }
@@ -157,14 +161,16 @@ let resizeStr(str,len) be
 /* helper function to validate char */
 let validate(x) be
 {
+  let val;
   test x < 'A' \/ x > 'z' do
   {
-    resultis false;
+    val := false;
   }
   else
   {
-    resultis true;
+    val := true;
   }
+  resultis val;
 }
 
 /* helper function to detect newline */
@@ -174,6 +180,10 @@ let isNewline(x) be
 }
 
 
+/* if '*' is the first char, returns print code 
+   otherwise returns string from stdin. 
+   string must be within a-z or A-Z otherwise returns invalid char error
+*/
 let getInput() be
 {
    /* local variables */
@@ -187,42 +197,45 @@ let getInput() be
   {
      char := inch(); //get char from user.
      if length = 0 /\ isNewLine(char) = true do //check if first char is newline.
-        break; //if so get a new char.
+     {
+        str:= INVALID_CHAR; //if so return invalid char error code.
+        break;
+     }
       
      test length < max_size * bytes_per_word - 1 do //check if string length less than 
      {                                              //max size converted to bytes (-1 leaving room for string terminator).
          test length = 0 /\ char = '*' do //if first char is * return print to print tree.
          {
-           str:= PRINT; //return print
-           break;
+             str:= PRINT; //return print
+             break;
          }
-         
          else test validate(char) = false \/ isNewline(char) = true do //if not a valid char or is a newline, in the middle of a word,
          {                                                             //then return string with string terminator appended.
-             test length > 0 do //check if past the first char, 
-             {                  
-               byte length of str := 0; //if so place string terminator on 
-               break; //str ;           //existing word and return string.
-             }
-             else 
-             {
-               str:= INVALID_CHAR; //return invalid char error
-               break;
-             }
+               test length > 0 do //check if past the first char, 
+               {                  
+                   byte length of str := 0; //if so place string terminator on 
+                   break;                   //existing word and return string.
+               }
+               else 
+               {
+                   str:= INVALID_CHAR; //return invalid char error
+                   break;
+               }
          }
          else //otherwise keep building string by appending chars
          {
-           byte length of str := char;
-           length +:= 1;
+             byte length of str := char;
+             length +:= 1;
          }
      }
      else //resize string
      {
-       str := resizeStr(@str,@max_size);
+         str := resizeStr(@str,@max_size);
      }
 
   }
-  resultis str;
+
+  resultis str; //return str
 }
 
 
