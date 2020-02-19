@@ -121,25 +121,31 @@ let strcpy(dst, src) be
    size is a pointer to the size of the 
    string being copied
 */
-let resizeStr(src,len) be
+let resizeStr(str,len) be
 {
-  let dst; 
-  !len *:= 2; 
-  dst := newvec(!len);
+  let newstr; 
+  !len *:= 2; //double size of str
+  newstr := newvec(!len); //allocate memory for new str
+
+  //zero out memory of new str
   for i = 0 to !len - 1 do
   {
-    dst ! i := 0;
+    newstr ! i := 0;
   }
-  strcpy(dst,!src);
-  freevec(!src);
-  !src := nil;
-  resultis dst;
+  //copy old str contents to new str
+  strcpy(newstr,!str);
+
+  //free old str
+  freevec(!str);
+
+  !str := nil; //set pointer to null
+  resultis newstr; //return new str
 }
 
 /* helper function to validate char */
 let validate(x) be
 {
-  test x < 'A' \/ x > 'z'do
+  test x < 'A' \/ x > 'z' do
   {
     resultis false;
   }
@@ -171,17 +177,17 @@ let getInput() be
        break //if so get new char
      }
 
-      //check if string length less than max size
-      //converted to bytes (-1 leaving room for string terminator
+      //check if string length less than 
+      //max size converted to bytes (-1 leaving room for string terminator)
      test length < max_size * bytes_per_word - 1 do
      {
          //if first char is * return print to print tree
          test length = 0 /\ char = '*' do
          {
            resultis PRINT;
-           break;
          }
-         //if not a valid char or is a newline, in the middle of word, then return string with string terminator appended
+         //if not a valid char or is a newline, in the middle of word, 
+         //then return string with string terminator appended
          else test validate(char) = false \/ isNewline(char) = true do
          {
              //check if past the first char, 
@@ -194,7 +200,6 @@ let getInput() be
              else //otherwise return invalid (meaning request input again)
              {
                resultis INVALID; 
-               break;
              }
          }
          else //otherwise keep building string by appending chars
@@ -202,7 +207,6 @@ let getInput() be
            byte length of str := char;
            length +:= 1;
          }
-
      }
      else //resize string
      {
@@ -244,9 +248,9 @@ let start() be
       case INVALID: //do nothing (i.e loop if input invalid)
         endcase;
       default:
-        out("adding to tree %s\n",uInput);
+        out("adding %s to tree\n",uInput);
         treeRoot := add(treeRoot,uInput);
     }
-        
   }
+
 }
