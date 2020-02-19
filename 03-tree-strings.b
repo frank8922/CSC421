@@ -219,10 +219,10 @@ let start() be
 
   /*  TODO:
    *  Program must:
-   *  - accept string from user X
-   *  - put them into a binary tree X
-   *  - print tree in alphabetical order when user types * 
-   *  - delete entrie tree, and repat all over X
+   *  - accept string from user (done)
+   *  - put them into a binary tree (done)
+   *  - print tree in alphabetical order when user types (done) 
+   *  - delete entrie tree, and repat all over (done)
    */
 
   let uInput = nil, treeRoot = nil, heap = vec(size);
