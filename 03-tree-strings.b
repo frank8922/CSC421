@@ -157,18 +157,18 @@ let getInput() be
          //if not a valid char or is a newline, in the middle of word, then return string with string terminator appended
          else test validate(char) = false \/ isNewline(char) = true do
          {
-           //check if past the first char, 
-           //if so place string terminator on existing word and return string
-           test length > 0 do
-           {
-             byte length of str := 0;
-             resultis str;
-           }
-           else //otherwise return invalid (meaning request input again)
-           {
-             resultis INVALID; 
-             break;
-           }
+             //check if past the first char, 
+             //if so place string terminator on existing word and return string
+             test length > 0 do
+             {
+               byte length of str := 0;
+               resultis str;
+             }
+             else //otherwise return invalid (meaning request input again)
+             {
+               resultis INVALID; 
+               break;
+             }
          }
          else //otherwise keep building string by appending chars
          {
@@ -204,7 +204,6 @@ let start() be
 
   while true do
   {
-
     uInput := getInput();
     /*out("str=%s(string),%d(int),%c(char),%x(hex)\n",uInput,uInput,uInput,uInput);*/
     switchon uInput into
@@ -215,9 +214,8 @@ let start() be
 
         //pass the tree by reference so I can remove all nodes
         rmTree(@treeRoot);
-
         endcase;
-      case INVALID: //do nothing aka loop if input invalid
+      case INVALID: //do nothing (i.e loop if input invalid)
         endcase;
       default:
         out("adding to tree %s\n",uInput);
