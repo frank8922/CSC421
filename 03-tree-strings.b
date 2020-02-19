@@ -22,6 +22,30 @@ let new_node(x) be
 }
 
 
+let strcmp(x,y) be
+{
+  let i = 0;
+  while true do
+  {
+    let char_x = byte i of x,
+        char_y = byte i of y;
+
+        test char_x < char_y do
+        {
+          resultis -1;
+        }
+        else test char_x = char_y do
+        {
+          resultis 0;
+        }
+        else
+        {
+          resultis 1;
+        }
+        
+        x +:= 1;
+  }
+}
 
 /* adds an element to the tree */
 /* root: the root node of the tree, is a pointer to a pointer*/
@@ -31,7 +55,7 @@ let add(root, val) be
   {
     resultis new_node(val);
   }
-  test root ! data > val then
+  test strcmp(root ! data,val) > 0 then
   {
     root ! left := add(root ! left,val);
   }
@@ -80,7 +104,10 @@ let strcpy(dst, src) be
   while true do
   {
     let c = byte i of src;
-    if c = 0 then
+
+    //if c = null terminator then
+    //append terminator and exit
+    if c = 0 then 
     {
       byte i of dst := c;
       break;
@@ -205,7 +232,6 @@ let start() be
   while true do
   {
     uInput := getInput();
-    /*out("str=%s(string),%d(int),%c(char),%x(hex)\n",uInput,uInput,uInput,uInput);*/
     switchon uInput into
     {
       case PRINT:
