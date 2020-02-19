@@ -21,7 +21,7 @@ let new_node(x) be
   resultis ptr;
 }
 
-
+/* helper function to compare strings */
 let strcmp(x,y) be
 {
   let i = 0;
