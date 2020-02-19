@@ -8,7 +8,7 @@ manifest
   size = 10000,
   sizeof_node = 3,
   buff = 2, //in words (i.e 32bit words)
-  PRINT = 2, //const used to indicate to print tree 
+  PRINT = -2, //const used to indicate to print tree 
   INVALID_CHAR = -1 //const used to indicate skip char
 }
 
@@ -162,21 +162,47 @@ let resizeStr(str,len) be
 let validate(x) be
 {
   let val;
-  test x < 'A' \/ x > 'z' do
+
+  switchon x into
   {
-    val := false;
+    case 'A'...'Z':
+      val := true;
+      endcase;
+    case 'a'...'z':
+      val := true;
+      endcase;
+    default:
+      val := false;
+      endcase;
   }
-  else
-  {
-    val := true;
-  }
+
   resultis val;
 }
 
 /* helper function to detect newline */
-let isNewline(x) be
+let isBlank(x) be
 {
-  resultis x = '\n'
+  let val;
+
+  switchon x into
+  {
+    case ' ':
+     val := true;
+     endcase;
+    case '\n':
+     val := true;
+     endcase;
+    case '\t':
+     val := true;
+     endcase;
+    case '\r':
+     val := true;
+     endcase;
+    default:
+     val := false;
+     endcase;
+  }
+  resultis val;
 }
 
 
@@ -191,12 +217,14 @@ let getInput() be
       max_size = buff, 
       str = newvec(max_size), 
       length = 0, 
-      bytes_per_word = 4;
-  
+      bytes_per_word = 4,
+      current_letter;
+
   while true do
   {
      char := inch(); //get char from user.
-     if length = 0 /\ isNewLine(char) = true do //check if first char is newline.
+
+     if length = 0 /\ isBlank(char) = true do //check if first char is newline.
      {
         str:= INVALID_CHAR; //if so return invalid char error code.
         break;
@@ -204,27 +232,26 @@ let getInput() be
       
      test length < max_size * bytes_per_word - 1 do //check if string length less than 
      {                                              //max size converted to bytes (-1 leaving room for string terminator).
-         test length = 0 /\ char = '*' do //if first char is * return print to print tree.
+         if length = 0 /\ char = '*' do //if first char is * return print to print tree.
          {
              str:= PRINT; //return print
              break;
          }
-         else test validate(char) = false \/ isNewline(char) = true do //if not a valid char or is a newline, in the middle of a word,
-         {                                                             //then return string with string terminator appended.
-               test length > 0 do //check if past the first char, 
-               {                  
-                   byte length of str := 0; //if so place string terminator on 
-                   break;                   //existing word and return string.
-               }
-               else 
-               {
-                   str:= INVALID_CHAR; //return invalid char error
-                   break;
-               }
+
+         test validate(char) = false do 
+         {                              
+            test isBlank(char) = false do
+            {
+              byte length of str := 0;
+            }
+            else
+            {
+              break;
+            }
          }
          else //otherwise keep building string by appending chars
          {
-             byte length of str := char;
+             byte length of str:= char;
              length +:= 1;
          }
      }
@@ -232,7 +259,6 @@ let getInput() be
      {
          str := resizeStr(@str,@max_size);
      }
-
   }
 
   resultis str; //return str
@@ -270,6 +296,7 @@ let start() be
         out("adding %s to tree\n",uInput);
         treeRoot := add(treeRoot,uInput);
     }
+
   }
 
 }
