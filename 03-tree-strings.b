@@ -103,17 +103,15 @@ let strcpy(dst, src) be
   let i = 0;
   while true do
   {
-    let c = byte i of src;
+    let char = byte i of src; //current letter in src[i]
 
-    //if c = null terminator then
-    //append terminator and exit
-    if c = 0 then 
+    if char = 0 then //if src[i] == '\0'
     {
-      byte i of dst := c;
+      byte i of dst := char; //dst[i] = '\0'
       break;
     }
-    byte i of dst := c;
-    i +:= 1
+    byte i of dst := char; //dst[i] += src[i]
+    i +:= 1 
   }
 }
 
@@ -123,21 +121,15 @@ let strcpy(dst, src) be
 */
 let resizeStr(str,len) be
 {
-  let newstr; 
+  let newstr;
   !len *:= 2; //double size of str
   newstr := newvec(!len); //allocate memory for new str
-
-  //zero out memory of new str
-  for i = 0 to !len - 1 do
+  for i = 0 to !len - 1 do //zero out memory of new str
   {
     newstr ! i := 0;
   }
-  //copy old str contents to new str
-  strcpy(newstr,!str);
-
-  //free old str
-  freevec(!str);
-
+  strcpy(newstr,!str); //copy old str contents to new str
+  freevec(!str); //free old str
   !str := nil; //set pointer to null
   resultis newstr; //return new str
 }
@@ -174,7 +166,7 @@ let getInput() be
       //check if first char is newline
      if length = 0 /\ isNewLine(char) = true do
      {
-       break //if so get new char
+       break //if so get a new char
      }
 
       //check if string length less than 
