@@ -239,6 +239,7 @@ let getInput() be
          {
             freevec(str);
             str:= INVALID_CHAR;
+            break;
          }
        }
        else
