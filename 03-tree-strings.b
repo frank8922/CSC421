@@ -145,10 +145,10 @@ let strcpy(dst, src) be
 */
 let resizeStr(str,len) be
 {
-  let newstr;
-  !len *:= 2; //double size of str
-  newstr := newvec(!len); //allocate memory for new str
-  for i = 0 to !len - 1 do //zero out memory of new str
+  let newstr, sz = len;
+  sz *:= 2; //double size of str
+  newstr := newvec(sz); //allocate memory for new str
+  for i = 0 to sz - 1 do //zero out memory of new str
   {
     newstr ! i := 0;
   }
@@ -204,7 +204,7 @@ let getInput() be
 {
    /* local variables */
   let char, 
-      max_size = buff, 
+      max_size = 2, 
       str = newvec(max_size), 
       length = 0, 
       bytes_per_word = 4,
@@ -216,6 +216,7 @@ let getInput() be
 
      if length = 0 /\ isBlank(char) = true do //check if first char is blank.
      {
+        freevec(str);
         str:= INVALID_CHAR; //if so return invalid char error code.
         break;
      }
@@ -224,20 +225,22 @@ let getInput() be
      {                                              //converted to bytes (-1 leaving room for string terminator).
          if length = 0 /\ char = '*' do //if first char is * return print to print tree.
          {
+             freevec(str);
              str:= PRINT; //return print
              break;
          }
 
          test validate(char) = false do 
          {                              
-            test isBlank(char) = false do
+            test length = 0 do
             {
-              byte length of str := 0;
+               str:= INVALID_CHAR;
             }
             else
             {
-              break;
+              byte length of str := 0;
             }
+            break;
          }
          else //otherwise keep building string by appending chars
          {
@@ -247,7 +250,7 @@ let getInput() be
      }
      else //resize string
      {
-         str := resizeStr(@str,@max_size);
+         str := resizeStr(@str,length);
      }
   }
 
