@@ -9,7 +9,7 @@ manifest
   sizeof_node = 3,
   buff = 2, //in words (i.e 32bit words)
   PRINT = -2, //const used to indicate to print tree 
-  INVALID_CHAR = -1 //const used to indicate skip char
+  INVALID_CHAR = -1
 }
 
 /*
@@ -58,7 +58,6 @@ let strcmp(x,y) be
         else test char_x = char_y do
         {
           val := 0;
-          break;
         }
         else
         {
@@ -135,7 +134,7 @@ let strcpy(dst, src) be
       break;
     }
     byte i of dst := char; //dst[i] += src[i]
-    i +:= 1 
+    i +:= 1; 
   }
 }
 
@@ -207,52 +206,49 @@ let getInput() be
       max_size = 2, 
       str = newvec(max_size), 
       length = 0, 
-      bytes_per_word = 4,
-      current_letter;
+      bytes_per_word = 4;
 
   while true do
   {
      char := inch(); //get char from user.
-
-     if length = 0 /\ isBlank(char) = true do //check if first char is blank.
+     test validate(char) = true do
      {
-        freevec(str);
-        str:= INVALID_CHAR; //if so return invalid char error code.
-        break;
+        test length < max_size * bytes_per_word - 1 do
+        {
+          byte length of str:= char;
+        }
+        else
+        { 
+          str:=resizeStr(@str,max_size);
+          max_size *:= 2;
+          byte length of str:= char;
+        }
+        length +:= 1;
      }
-      
-     test length < max_size * bytes_per_word do //check if str length < max size of str
-     {                                              //converted to bytes (-1 leaving room for string terminator).
-         if length = 0 /\ char = '*' do //if first char is * return print to print tree.
+     else 
+     {
+       test length = 0 do
+       {
+         test char = '*' do
          {
-             freevec(str);
-             str:= PRINT; //return print
-             break;
-         }
-
-         test validate(char) = false do 
-         {                              
-            test length = 0 do
-            {
-               str:= INVALID_CHAR;
-            }
-            else
-            {
-              byte length of str := 0;
-            }
+            freevec(str);
+            str:=PRINT;
             break;
          }
-         else //otherwise keep building string by appending chars
+         else
          {
-             byte length of str:= char;
-             length +:= 1;
+            freevec(str);
+            str:= INVALID_CHAR;
          }
-     }
-     else //resize string
-     {
-         str := resizeStr(@str,length);
-     }
-  }
+       }
+       else
+       {
+          byte length of str := 0;
+          break;
+       }
+    }
+
+ }
 
   resultis str; //return str
 }
@@ -276,7 +272,6 @@ let start() be
   while true do
   {
     uInput := getInput();
-    out("str=%s,c=%c,hex=%x\n",uInput,uInput,uInput);
     switchon uInput into
     {
       case PRINT:
@@ -285,8 +280,8 @@ let start() be
         rmTree(@treeRoot); //pass the tree by reference so I can remove all nodes
         treeRoot := nil;
         endcase;
-      case INVALID_CHAR: //do nothing (i.e loop if input invalid)
-        endcase;
+      case INVALID_CHAR:
+          endcase;
       default:
         out("adding %s to tree\n",uInput);
         treeRoot := add(treeRoot,uInput);
