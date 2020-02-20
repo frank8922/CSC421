@@ -183,24 +183,11 @@ let validate(x) be
 let isBlank(x) be
 {
   let val;
-
   switchon x into
   {
-    case '\n':
-     val := true;
-     endcase;
-    case '\t':
-     val := true;
-     endcase;
-    case '\r':
-     val := true;
-     endcase;
-    case '\s':
-     val := true;
-     endcase;
-    case '\b':
-     val := true;
-     endcase;
+    case 0...32: //ascii values we don't care about (space,tabs,etc)
+      val:= true;
+      endcase;
     default:
      val := false;
      endcase;
@@ -233,8 +220,8 @@ let getInput() be
         break;
      }
       
-     test length < max_size * bytes_per_word - 1 do //check if string length less than 
-     {                                              //max size converted to bytes (-1 leaving room for string terminator).
+     test length < max_size * bytes_per_word do //check if str length < max size of str
+     {                                              //converted to bytes (-1 leaving room for string terminator).
          if length = 0 /\ char = '*' do //if first char is * return print to print tree.
          {
              str:= PRINT; //return print
@@ -286,12 +273,14 @@ let start() be
   while true do
   {
     uInput := getInput();
+    out("str=%s,c=%c,hex=%x\n",uInput,uInput,uInput);
     switchon uInput into
     {
       case PRINT:
         out("printing tree\n");
         printTree(treeRoot);
         rmTree(@treeRoot); //pass the tree by reference so I can remove all nodes
+        treeRoot := nil;
         endcase;
       case INVALID_CHAR: //do nothing (i.e loop if input invalid)
         endcase;
