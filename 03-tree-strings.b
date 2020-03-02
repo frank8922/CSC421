@@ -12,25 +12,137 @@ manifest
   INVALID_CHAR = -1
 }
 
-/*
-static { vecsize = 0, vecused = 0, vecspace }
 
-let init(v, s) be 
+
+static { vecsize = 0, vecused = 0, vecspace, freelist}
+
+let my_init(v, s) be 
 { 
+  let initial_size;
+
+  manifest
+  {
+    chunk_size = 0,
+    flag = 1, 
+    not_in_use = 12121212,
+    in_use = 98989898,
+    prev_freeblk = 2,
+    next_freeblk = 3
+  }
+
   vecsize := s;
-  vecspace := v; vecused := 0 
+  vecspace := v; 
+  freelist := vecspace;
+
+  freelist ! chunk_size := vecsize;
+  freelist ! flag := not_in_use;
+  freelist ! prev_freeblk := -1;
+  freelist ! next_freeblk := -1;
+  freelist ! size := vecsize;
+  
+  out("**init()**\nfreelist[chunksize]=%d address=%x\nfreelist[flag]=%d address=%x\nfreelist[prev_freeblk]=%d address=%x\nfreelist[next_freeblk]=%d address=%x\nfreelist[chunksize]=%d address=%x\n**end init**\n",
+
+  freelist ! chunk_size,@(freelist ! chunk_size),
+  freelist ! flag,@(freelist ! flag),
+  freelist ! prev_freeblk,@(freelist ! prev_freeblk),
+  freelist ! next_freeblk,@(freelist ! next_freeblk),
+  freelist ! size,@(freelist ! size));
+
 }
 
-let lamest_newvec(n) be
+let my_newvec(n) be
 {
+  let head_freelist = freelist, new_size = 0, heap_size = vecsize - vecused, 
+      current_freeblk, old_size, found = false,
+      usedblk, current_blk_size;
 
+  manifest
+  {
+    chunk_size = 0,
+    flag = 1, 
+    not_in_use = 12121212,
+    in_use = 98989898,
+    prev_freeblk = 2,
+    next_freeblk = 3
+  }
+
+  /*new_chunk_size := n+(8-(n rem 8)); //calculate new size (min of 5 ptrs)*/
+
+  new_size := n + 3; //add 3 to account for pointers
+  current_freeblk := head_freelist; //start head of freelist
+  current_blk_size := (current_freeblk ! chunk_size); //freeblock size
+
+  out("\n**mynewvec()**\ncurrent_freeblk_size=%d\n",current_blk_size); //size before splitting block
+  out("requested_chunk_size=%d",new_size); //size of new used chunk
+
+  //check if space available in heap
+  if heap_size > new_size do 
+  {
+    while true do
+    {
+      //check if the current free block can fit requested block
+      test current_freeblk ! chunk_size >= new_size do  
+      {
+          //get old size
+          old_size := current_freeblk ! chunk_size;
+          
+          //adjust size of freeblk at begining and end of block
+          current_freeblk ! old_size := old_size - new_size;
+          current_freeblk ! chunk_size := old_size - new_size;
+
+          //set address of used block
+          usedblk := @(current_freeblk ! current_blk_size)-new_size;
+
+          //set size of used chunk
+          usedblk ! chunk_size := new_size;
+
+          //set in use flag
+          usedblk ! flag := in_use;
+
+          vecused +:= new_size;
+
+
+
+out("\ncurrent_freeblk size=%d from address=%x to address=%x\nusedblk size=%d flag=%d from address=%x to address=%x\n",
+       current_freeblk ! chunk_size, @(!current_freeblk), @(!usedblk)-1,
+       usedblk ! chunk_size, usedblk ! flag, @(!usedblk),@(!usedblk) + usedblk!chunk_size);
+
+
+
+
+          out("returned a block\n"); 
+          out("**end mynewvec()**\n");
+          resultis usedblk;
+      }
+      else
+      {
+          test current_freeblk ! next_freeblk = -1 do
+          {
+            break;
+          }
+          else
+          {
+            current_freeblk := current_freeblk ! next_freeblk;
+          }
+      }
+    }
+  }
+  
+    //else no memory
+    out("\ninsufficent free memory\n");
+    out("**end mynewvec()**\n");
+    finish;
 }
 
-let lamest_freevec(v) be 
+
+let my_freevec(v) be 
 {
+  out("in freevec");
 
 }
-*/
+
+
+
   
 let new_node(x) be
 {
@@ -208,6 +320,7 @@ let getInput() be
       length = 0, 
       bytes_per_word = 4;
 
+      out("in getInput\n");
   while true do
   {
      char := inch(); //get char from user.
@@ -258,17 +371,13 @@ let getInput() be
 let start() be
 {
 
-  /*  TODO:
-   *  Program must:
-   *  - accept string from user (done)
-   *  - put them into a binary tree (done)
-   *  - print tree in alphabetical order when user types (done) 
-   *  - delete entrie tree, and repat all over (done)
-   */
-
-  let uInput = nil, treeRoot = nil, heap = vec(size);
+  let uInput = nil, treeRoot = nil, heap = vec(size), array1, array2, array3,
+  newvec = my_newvec, freevec = my_freevec, init = my_init; 
   /* initialize heap */
   init(heap,size);
+  array1 := newvec(5);//testing newvec
+  array2 := newvec(13);//testing newvec
+  array3 := newvec(size);//testing newvec
 
   while true do
   {
