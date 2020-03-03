@@ -5,7 +5,7 @@ manifest
   data = 0,
   left = 1,
   right = 2,
-  size = 10000,
+  size = 100,
   sizeof_node = 3,
   buff = 2, //in words (i.e 32bit words)
   PRINT = -2, //const used to indicate to print tree 
@@ -13,6 +13,15 @@ manifest
 }
 
 
+manifest
+{
+  chunk_size = 0,
+  flag = 1, 
+  not_in_use = 12121212,
+  in_use = 98989898,
+  prev_freeblk = 2,
+  next_freeblk = 3
+}
 
 static { vecsize = 0, vecused = 0, vecspace, freelist}
 
@@ -20,15 +29,6 @@ let my_init(v, s) be
 { 
   let initial_size;
 
-  manifest
-  {
-    chunk_size = 0,
-    flag = 1, 
-    not_in_use = 12121212,
-    in_use = 98989898,
-    prev_freeblk = 2,
-    next_freeblk = 3
-  }
 
   vecsize := s;
   vecspace := v; 
@@ -36,10 +36,11 @@ let my_init(v, s) be
 
   freelist ! chunk_size := vecsize;
   freelist ! flag := not_in_use;
-  freelist ! prev_freeblk := -1;
-  freelist ! next_freeblk := -1;
+  freelist ! prev_freeblk := NIL;
+  freelist ! next_freeblk := NIL;
   freelist ! size := vecsize;
   
+//**DEBUG PRINT STATMENTS
   out("**init()**\nfreelist[chunksize]=%d address=%x\nfreelist[flag]=%d address=%x\nfreelist[prev_freeblk]=%d address=%x\nfreelist[next_freeblk]=%d address=%x\nfreelist[chunksize]=%d address=%x\n**end init**\n",
 
   freelist ! chunk_size,@(freelist ! chunk_size),
@@ -47,33 +48,25 @@ let my_init(v, s) be
   freelist ! prev_freeblk,@(freelist ! prev_freeblk),
   freelist ! next_freeblk,@(freelist ! next_freeblk),
   freelist ! size,@(freelist ! size));
+//** END DEBUG PRINT STATEMENTS
 
 }
 
 let my_newvec(n) be
 {
   let head_freelist = freelist, new_size = 0, heap_size = vecsize - vecused, 
-      current_freeblk, old_size, found = false,
+      current_freeblk, old_size, found = false, offset = n+3,
       usedblk, current_blk_size;
 
-  manifest
-  {
-    chunk_size = 0,
-    flag = 1, 
-    not_in_use = 12121212,
-    in_use = 98989898,
-    prev_freeblk = 2,
-    next_freeblk = 3
-  }
-
-  /*new_chunk_size := n+(8-(n rem 8)); //calculate new size (min of 5 ptrs)*/
-
-  new_size := n + 3; //add 3 to account for pointers
+  new_size := 5 + offset - (offset rem 5); //add 3 to account for pointers
   current_freeblk := head_freelist; //start head of freelist
   current_blk_size := (current_freeblk ! chunk_size); //freeblock size
 
+//**DEBUG PRINT STATEMNTS
+  out("\nrequested size=%d\nadjusted size=%d",n,new_size);
   out("\n**mynewvec()**\ncurrent_freeblk_size=%d\n",current_blk_size); //size before splitting block
   out("requested_chunk_size=%d",new_size); //size of new used chunk
+//**END DEBUG PRINT STATEMENTS
 
   //check if space available in heap
   if heap_size > new_size do 
@@ -81,7 +74,7 @@ let my_newvec(n) be
     while true do
     {
       //check if the current free block can fit requested block
-      test current_freeblk ! chunk_size >= new_size do  
+      test current_freeblk ! chunk_size > new_size do  
       {
           //get old size
           old_size := current_freeblk ! chunk_size;
@@ -91,7 +84,7 @@ let my_newvec(n) be
           current_freeblk ! chunk_size := old_size - new_size;
 
           //set address of used block
-          usedblk := @(current_freeblk ! current_blk_size)-new_size;
+          usedblk := current_freeblk + new_size - 1;
 
           //set size of used chunk
           usedblk ! chunk_size := new_size;
@@ -102,11 +95,11 @@ let my_newvec(n) be
           vecused +:= new_size;
 
 
-
-out("\ncurrent_freeblk size=%d from address=%x to address=%x\nusedblk size=%d flag=%d from address=%x to address=%x\n",
-       current_freeblk ! chunk_size, @(!current_freeblk), @(!usedblk)-1,
-       usedblk ! chunk_size, usedblk ! flag, @(!usedblk),@(!usedblk) + usedblk!chunk_size);
-
+//**DEBUG PRINT STATEMENTS
+out("\ncurrent_freeblk size after allocating=%d from address=%x to address=%x\nusedblk size=%d flag=%d from address=%x to address=%x\n",
+       current_freeblk ! chunk_size, current_freeblk, current_freeblk+current_freeblk ! chunk_size,
+       usedblk ! chunk_size, usedblk ! flag, usedblk, usedblk + usedblk!chunk_size);
+//**END DEBUG PRINT STATEMENTS
 
 
 
@@ -114,9 +107,15 @@ out("\ncurrent_freeblk size=%d from address=%x to address=%x\nusedblk size=%d fl
           out("**end mynewvec()**\n");
           resultis usedblk;
       }
+      else test current_freeblk ! chunk_size = new_size do
+      {
+         //adjust next & prev pointers to null 
+         out("current_freeblk[0]=%d == newsize=%d",current_freeblk!chunk_size,new_size);
+
+      }
       else
       {
-          test current_freeblk ! next_freeblk = -1 do
+          test current_freeblk ! next_freeblk = NIL do
           {
             break;
           }
@@ -375,9 +374,9 @@ let start() be
   newvec = my_newvec, freevec = my_freevec, init = my_init; 
   /* initialize heap */
   init(heap,size);
-  array1 := newvec(5);//testing newvec
-  array2 := newvec(13);//testing newvec
-  array3 := newvec(size);//testing newvec
+  array1 := newvec(5);//testing newvec with small chunks
+  array2 := newvec(13);//testing newvec with small chunks
+  /*array3 := newvec(size);//testing newvec with size that exceeds capacity*/
 
   while true do
   {
