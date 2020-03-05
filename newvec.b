@@ -63,12 +63,12 @@ let my_newvec(n) be
         test adj_size < curr_chunk!ch_size do //split the block
         {
             used_chunk := !(curr_chunk!ch_size)-adj_size;
-            out("curr_chunk[%d]=%d, addr=%x\n",(curr_chunk!ch_size)-adj_size,curr_chunk!(ch_size-adj_size),used_chunk);
+            out("curr_chunk[%d]=%d, addr=%x\n",(curr_chunk!ch_size)-adj_size,(curr_chunk!ch_size)-adj_size,used_chunk);
             used_chunk!ch_size := adj_size;
             out("used_chunk[%d]=%d, addr=%x\n",ch_size,used_chunk!ch_size,used_chunk);
             used_chunk!flag := in_use;
             used_chunk!(ch_size+adj_size-1):= adj_size;
-            out("used_chunk[%d]=%d, addr=%x\n",ch_size+adj_size-1,used_chunk!(ch_size+adj_size-1),@(used_chunk!(ch_size+adj_size-1)));
+            out("used_chunk[%d]=%d, addr=%x\n",ch_size+adj_size-1,(used_chunk!ch_size)+adj_size-1,@(used_chunk!ch_size)+adj_size-1);
 
             vecused +:= adj_size;
             resultis used_chunk!(flag+1);
@@ -77,7 +77,7 @@ let my_newvec(n) be
         {
             used_chunk := curr_chunk;
             used_chunk!ch_size := curr_chunk!ch_size;
-            used_chunk!(used_chunk!ch_size-1) := used_chunk!ch_size;
+            used_chunk!((used_chunk!ch_size)-1) := used_chunk!ch_size;
             used_chunk!flag := in_use;
 
            test curr_chunk!prev = nil /\ curr_chunk!next = nil do //then its the last free chunk
@@ -131,6 +131,7 @@ let start() be
   for i = 0 to 10 do 
   {
     out("%d is element an in array\n",i);
+    //out("%x\n",!(array!i));
   }
 
   for i = 0 to 70 do
@@ -141,5 +142,6 @@ let start() be
   for i = 0 to 70 do 
   {
     out("%d is element an in array2\n",i);
+    //out("%x\n",!(array2!i));
   }
 }
