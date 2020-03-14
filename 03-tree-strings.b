@@ -86,7 +86,6 @@ let my_newvec(n) be
       heap_bot := heap + size-1;
       lastblock := heap_bot - !heap_bot+1;
 
-  //if the size requseted (incld pointers) is < the heap, no memory
   if vecsize < adj_size /\ vecused >= vecsize do 
   { out("insufficent memory\n"); return; }
 
