@@ -80,17 +80,17 @@ let my_newvec(n) be
       heap_bot,
       req_size     = n,
       adj_size     = 5 + offset - (offset rem 5), //smallest possible chunk 10
-      usedblk_size = adj_size,  
-      head = freelist;
+      usedblk_size = adj_size;
 
       heap := vecspace;
       heap_bot := heap + size-1;
       lastblock := heap_bot - !heap_bot+1;
-  //out("user requested size %d, user adj size %d\n",req_size,adj_size);
+
   //if the size requseted (incld pointers) is < the heap, no memory
   if vecsize < adj_size /\ vecused >= vecsize do 
   { out("insufficent memory\n"); return; }
 
+  //link the blocks in the freelist
    firstblock := heap;
    while firstblock < heap_bot do
    {
@@ -106,8 +106,8 @@ let my_newvec(n) be
    freelist := firstfree;
 
       
-    curr_chunk := head;
-  //search for freeblock that causedn fit request needs
+   curr_chunk := freelist;
+  //search for freeblock that fit request needs
   while curr_chunk /= nil do
   {
     if adj_size <= curr_chunk!ch_size do
@@ -177,7 +177,9 @@ let my_freevec(p) be
    let header = -2,lastblock,diff,
        heap,heap_bot,firstblock,block_above,
        nextblock,head,
-       usedblock,merged_above = false,merged_below = false;
+       usedblock,
+       merged_above = false,
+       merged_below = false;
          
     //get heap bounderies
     heap := vecspace;
@@ -200,11 +202,11 @@ let my_freevec(p) be
           
     head := heap;
     nextblock := head + (head!ch_size);
-    nextblock := usedblock; //set the reference block
-    block_above := usedblock; //set the reference block
+    nextblock := usedblock; //set the reference block below
+    block_above := usedblock; //set the reference block above
 
-    nextblock +:= usedblock!ch_size; //calc nextblock
-    block_above := block_above - usedblock!-1; //calc nextblock*/
+    nextblock +:= usedblock!ch_size; //calc block below
+    block_above := block_above - usedblock!-1; //calc block above
     lastblock := heap_bot - !heap_bot+1;
     
 
