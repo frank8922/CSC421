@@ -25,7 +25,29 @@ manifest
 
 }
 
-static { vecsize = 0, vecused = 0, vecspace, freelist}
+static { vecsize = 0, vecused = 0, vecspace, freelist, firstfree} 
+
+let printHeap() be 
+{
+  out("ADDRESS INT STRG\n");
+  for i = 0 to size-1 do
+  {
+    out("%x  %d  %s\n",@(vecspace!i),vecspace!i,vecspace!i);
+  }
+}
+
+let printFreelist() be
+{
+   let head = freelist;
+   out("PRINTING FREELIST\n");
+   while head /= nil do
+   {
+      out("%x %d\n",head,head!ch_size);
+      head := head!next;
+   }
+
+}
+
 
 let my_init(v,s) be
 {
@@ -35,17 +57,14 @@ let my_init(v,s) be
   freelist := vecspace;
 
   freelist ! ch_size := s;
-  out("freelist[%d]=%d address=%x\n",ch_size,freelist!ch_size,freelist);
   freelist ! prev := nil;
-  out("freelist[%d]=%d\n",prev,freelist!prev);
   freelist ! next := nil;
-  out("freelist[%d]=%d\n",next,freelist!next);
   freelist ! flag := free;
-  out("freelist[%d]=%d\n",flag,freelist!flag);
   //set end of chunk
   freelist!(freelist!ch_size-1) := freelist!ch_size;
-  out("freelist[%d]=%d\n",freelist!ch_size-1,freelist!(freelist!ch_size-1));
+  firstfree := freelist;
 
+  //printHeap();
 
 }
 
@@ -55,50 +74,84 @@ let my_newvec(n) be
   let offset = n + 3, 
       used_chunk, 
       curr_chunk, 
+      lastblock, 
+      firstblock,
+      heap,
+      heap_bot,
       req_size     = n,
-      adj_size     = 5 + offset - (offset rem 5),
+      adj_size     = 5 + offset - (offset rem 5), //smallest possible chunk 10
       usedblk_size = adj_size,  
       head = freelist;
 
+      heap := vecspace;
+      heap_bot := heap + size-1;
+      lastblock := heap_bot - !heap_bot+1;
+  //out("user requested size %d, user adj size %d\n",req_size,adj_size);
   //if the size requseted (incld pointers) is < the heap, no memory
-  if vecsize < adj_size do { out("insufficent memory\n"); finish; }
- // out("%d is the requested size, %d is the adjusted size\n",n,adj_size);
+  if vecsize < adj_size /\ vecused >= vecsize do 
+  { out("insufficent memory\n"); return; }
 
-  curr_chunk := head;
+   firstblock := heap;
+   while firstblock < heap_bot do
+   {
+     if firstblock!flag = free do 
+     {
+       freelist!next := firstblock;
+       firstblock!prev := freelist;
+       freelist := freelist!next;
+     }
+     firstblock +:= firstblock!ch_size;
+   }
+   freelist!next := nil;
+   freelist := firstfree;
+
+      
+    curr_chunk := head;
   //search for freeblock that causedn fit request needs
   while curr_chunk /= nil do
   {
-    curr_chunk := head;
     if adj_size <= curr_chunk!ch_size do
     {
         test adj_size < curr_chunk!ch_size do //split the block
         {
+            /*userchunk =  the current chunk size - user adjusted size */
             used_chunk := curr_chunk + (curr_chunk!ch_size) - adj_size;
+
+            /*bottom of currentchunk = usedchunk-1*/
             used_chunk!-1 := (curr_chunk!ch_size)-adj_size;
+
+            /*set the usedchunks size to user adjusted size*/
             used_chunk!ch_size := adj_size;
+
+            /*set flags*/
             used_chunk!flag := in_use;
+
+            /*set the bottom of usedchunk to proper size */
             used_chunk!(adj_size-1) := adj_size;
+
+            /*subtract the user adjusted size from top of current chunk*/
             curr_chunk!ch_size -:= adj_size;
 
-            vecused +:= adj_size;
+            vecused +:= used_chunk!ch_size;
+            /* return block for user to use */
             resultis used_chunk + 2;
         }
         else // otherwise n equal to chunk_size; use whole block
         {
-            used_chunk := curr_chunk;
-            used_chunk!flag := in_use;
+           used_chunk := curr_chunk;
+           used_chunk!flag := in_use;
 
            test curr_chunk!prev = nil /\ curr_chunk!next = nil do //then its the last free chunk
             { //swap pointers
               freelist := nil;
             }
-            else test curr_chunk!prev = nil do
-            {//head of list
+            else test curr_chunk!prev = nil do//check if curr_chunk is head of list
+            {
               (used_chunk!next)!prev := nil;
               freelist := used_chunk!next;
             }
-            else test curr_chunk!next = nil do
-            {//tail of list
+            else test curr_chunk!next = nil do//check if curr_chunk tail of list
+            {
               (used_chunk!prev)!next := nil;
             }
             else
@@ -107,7 +160,7 @@ let my_newvec(n) be
               (used_chunk!prev)!next := used_chunk!next;
             }
 
-            vecused +:= adj_size;
+            vecused +:= used_chunk!ch_size;
             resultis used_chunk + 2;
         }   
     }
@@ -115,15 +168,88 @@ let my_newvec(n) be
   }
 
 out("no block found: insuffcient memory\n");
-finish;
-}
+return;
+}//end newvec
 
 
-let my_freevec(v) be 
+let my_freevec(p) be 
 {
-  out("in freevec");
+   let header = -2,lastblock,diff,
+       heap,heap_bot,firstblock,block_above,
+       nextblock,head,
+       usedblock,merged_above = false,merged_below = false;
+         
+    //get heap bounderies
+    heap := vecspace;
+    heap_bot := heap + size-1;
 
-}
+    if heap_bot - (p+header) < 0 do
+    { /*out("%x out of bounds\n",p+header);*/ return;}
+
+    if heap_bot - (p+header) > size-1 do
+    { /*out("%x out of bounds\n",p+header);*/ return;}
+    
+    //get header
+    usedblock := p + header;
+
+    //set flag to free
+    usedblock !flag := free;
+    
+    vecused -:= usedblock!ch_size;
+
+          
+    head := heap;
+    nextblock := head + (head!ch_size);
+    nextblock := usedblock; //set the reference block
+    block_above := usedblock; //set the reference block
+
+    nextblock +:= usedblock!ch_size; //calc nextblock
+    block_above := block_above - usedblock!-1; //calc nextblock*/
+    lastblock := heap_bot - !heap_bot+1;
+    
+
+    //block below is free
+    if nextblock!flag = free /\ nextblock <= lastblock do
+    {
+       usedblock!ch_size +:= nextblock!ch_size;  
+       !(nextblock + nextblock!ch_size -1) := usedblock!ch_size;
+       merged_below := true;
+
+    }
+    //block above is free
+    if block_above!flag = free /\ block_above >= heap do 
+    {
+       !(usedblock + usedblock!ch_size-1) +:= block_above!ch_size;
+       block_above!ch_size +:= usedblock!ch_size;
+       merged_above := true;
+    }
+    
+    if merged_above = false do
+    {
+        freelist!next := usedblock;
+        usedblock!prev := freelist;
+    }
+
+    if merged_above = true do
+    {
+       freelist!next := block_above;
+       block_above!prev := freelist;
+    }
+    freelist := freelist!next;
+
+    //search for first free chunk
+    for i = 0 to size-1 do
+    {
+      if heap!i = free do
+      {
+        freelist := heap + (i - 1);
+        firstfree := freelist;
+        break;
+      }
+    }
+
+ freelist := firstfree;
+}//end of freevec()
 
 
 
@@ -194,12 +320,14 @@ let rmTree(rootPtr) be
   {
     return; 
   }
-  freevec(!rootPtr ! left);
-  !rootPtr ! left := nil;
-  freevec(!rootPtr ! right);
-  !rootPtr ! right := nil;
-  freevec(!rootPtr);
-  !rootPtr := nil;
+  freevec(rootPtr!left);
+  rootPtr!left := nil;
+  freevec(rootPtr!right);
+  rootPtr ! right := nil;
+  freevec(rootPtr!data);
+  rootPtr!data := nil;
+  freevec(rootPtr);
+  rootPtr := nil;
 }
 
 /* print tree */
@@ -210,9 +338,8 @@ let printTree(rootPtr) be
     return; 
   }
   printTree(rootPtr ! left);
-  out("%s\n",rootPtr ! data);
+  out("printing %s\n",rootPtr!data);
   printTree(rootPtr ! right);
-
 
 }
 
@@ -247,9 +374,10 @@ let resizeStr(str,len) be
   {
     newstr ! i := 0;
   }
-  strcpy(newstr,!str); //copy old str contents to new str
-  freevec(!str); //free old str
-  !str := nil; //set pointer to null
+  strcpy(newstr,str); //copy old str contents to new str
+  //freevec(!str); //free old str
+  freevec(str);
+  str := nil; //set pointer to null
   resultis newstr; //return new str
 }
 
@@ -300,23 +428,44 @@ let getInput() be
    /* local variables */
   let char, 
       max_size = 2, 
-      str = newvec(max_size), 
+      str, //= newvec(max_size), 
       length = 0, 
       bytes_per_word = 4;
 
-      //out("in getInput\n");
+//check if first char is valid,if valid then add to str
+//otherwise do not allocate string until user enters valid char
+ while true do
+ {
+     char := inch(); //get char from user.
+     test validate(char) = true do
+     {
+        str := newvec(max_size);
+        byte length of str := char;
+        length +:= 1;
+        break;
+     }
+     else test char = '*' do
+     {
+        resultis PRINT;
+     }
+     else
+     {
+        resultis INVALID_CHAR;
+     }
+  }
+
   while true do
   {
      char := inch(); //get char from user.
      test validate(char) = true do
      {
-        test length < max_size * bytes_per_word - 1 do
+        test length < (max_size * bytes_per_word - 1) do
         {
           byte length of str:= char;
         }
         else
         { 
-          str:=resizeStr(@str,max_size);
+          str :=resizeStr(str,max_size);
           max_size *:= 2;
           byte length of str:= char;
         }
@@ -324,30 +473,13 @@ let getInput() be
      }
      else 
      {
-       test length = 0 do
-       {
-         test char = '*' do
-         {
-            freevec(str);
-            str:=PRINT;
-            break;
-         }
-         else
-         {
-            freevec(str);
-            str:= INVALID_CHAR;
-            break;
-         }
-       }
-       else
-       {
-          byte length of str := 0;
-          break;
-       }
-    }
+        byte length of str := 0;
+        break;
+     }
 
  }
 
+  //out("%x=%s\n",str,str);
   resultis str; //return str
 }
 
@@ -356,12 +488,9 @@ let start() be
 {
 
   let uInput = nil, treeRoot = nil, heap = vec(size), array1, array2, array3;
-  newvec := my_newvec; /*freevec = my_freevec,*/ init := my_init; 
+  newvec := my_newvec; freevec := my_freevec; init := my_init; 
   /* initialize heap */
   init(heap,size);
-  //array1 := newvec(5);//testing newvec with small chunks
-  //array2 := newvec(13);//testing newvec with small chunks
-  /*array3 := newvec(size);//testing newvec with size that exceeds capacity*/
 
   while true do
   {
@@ -371,10 +500,14 @@ let start() be
       case PRINT:
         out("printing tree\n");
         printTree(treeRoot);
-        rmTree(@treeRoot); //pass the tree by reference so I can remove all nodes
+        rmTree(treeRoot); //pass the tree by reference so I can remove all nodes
         treeRoot := nil;
+        //freevec(uInput);
+        //printHeap();
+        //printFreelist();
         endcase;
       case INVALID_CHAR:
+          freevec(uInput);
           endcase;
       default:
         out("adding %s to tree\n",uInput);
